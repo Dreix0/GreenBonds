@@ -13,6 +13,7 @@ contract Bond is ERC20 {
 
     uint32 public faceValue; // Face value of bond (in eur, usd or other fiat)
     uint32 public maxSupply; // Maximum number of bonds that can be issued
+    uint32 public currentSupply; // Number of bonds in circulation
     uint32 public issueDate; // Issue date (timestamp) after which bonds are issued and can no longer be purchased
     bool public issueStatus; // Boolean indicator indicating whether the bond has already been issued
     uint32 public issuePrice; // Initial purchase price per bond during the presale period (in eur, usd or other fiat)
@@ -112,7 +113,7 @@ contract Bond is ERC20 {
     /* Allows users to purchase bonds during the presale period before issue */
     function prePurchaseBond(uint32 amount) public onlyDuringPreMint{
         require(amount > 0, "Amount must be greater than 0");
-        require(totalSupply() + amount <= maxSupply, "Not enough remaining bonds (max supply reached)"); // mettre une variable currentSupply
+        require(currentSupply + amount <= maxSupply, "Not enough remaining bonds (max supply reached)");
         require(paymentToken.transferFrom(msg.sender, address(this), (amount * issuePrice)), "Payment failed");
 
         // If this is the first time this user has purchased bonds, he is added to the list of buyers
@@ -121,6 +122,7 @@ contract Bond is ERC20 {
         }
 
         preMintBalances[msg.sender] += amount;
+        currentSupply += amount;
 
         emit BondsPurchased(msg.sender, amount);
     }
